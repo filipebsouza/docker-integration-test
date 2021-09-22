@@ -86,7 +86,12 @@ namespace IntegrationTests.Helpers
             {
                 FromImage = ImageName,
                 Tag = $"{Tag ?? "latest"}"
-            }, null, new Progress<JSONMessage>());
+            }, new AuthConfig
+            {
+                Email = "filipe.bsouza@gmail.com",
+                Password = "344b$WkJ^TLxLw@FY",
+                Username = "filipebsouza"
+            }, new Progress<JSONMessage>());
 
             var container = await _dockerClient.Containers.CreateContainerAsync(new CreateContainerParameters
             {

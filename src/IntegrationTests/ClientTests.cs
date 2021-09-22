@@ -1,9 +1,9 @@
 using System;
 using System.Threading.Tasks;
 using Infra;
+using Infra.Migrations;
 using Infra.Models;
 using Infra.Repositories;
-using Infra.Services;
 using IntegrationTests.Helpers;
 using NHibernate;
 using Xunit;
@@ -30,7 +30,7 @@ namespace IntegrationTests
 
         public async ValueTask DisposeAsync()
         {
-            _session.Close();
+            // _session.Close();
             await _sqlServerDockerManager.DisposeAsync();
         }
 
@@ -38,20 +38,16 @@ namespace IntegrationTests
         public async Task Should_be_create_an_client_on_database()
         {
             await _sqlServerDockerManager.RunContainer();
-            _session = SessionFactoryCreator.Create(ConfigModel.SqlServerUsername,
-                ConfigModel.SqlServerPassword, ConfigModel.SqlServerDatabaseName,
-                ConfigModel.ContainerHostPort).OpenSession();
-            _clientRepository = new ClientRepository(_session);
+            MigrationRunner.Run(ConfigModel.ConnectionString);
+            _clientRepository = new ClientRepository(ConfigModel.ConnectionString);
             var client = new Client
             {
                 Name = "John Carter",
                 Age = 34,
                 Active = true
             };
-            var transaction = _session.BeginTransaction();
 
             _clientRepository.Insert(client);
-            transaction.Commit();
 
             var clients = _clientRepository.GetAll();
             Assert.Contains(clients, c => c.Name == client.Name && c.Age == client.Age);
