@@ -31,13 +31,13 @@ namespace IntegrationTests
         public async ValueTask DisposeAsync()
         {
             // _session.Close();
-            await _sqlServerDockerManager.DisposeAsync();
+            // await _sqlServerDockerManager.DisposeAsync();
         }
 
         [Fact]
         public async Task Should_be_create_an_client_on_database()
         {
-            await _sqlServerDockerManager.RunContainer();
+            // await _sqlServerDockerManager.RunContainer();
             MigrationRunner.Run(ConfigModel.ConnectionString);
             _clientRepository = new ClientRepository(ConfigModel.ConnectionString);
             var client = new Client

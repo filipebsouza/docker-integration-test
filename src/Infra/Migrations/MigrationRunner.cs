@@ -8,7 +8,7 @@ namespace Infra.Migrations
     {
         public static bool Run(string connectionString)
         {
-            DropDatabase.For.SqlDatabase(connectionString);
+            // DropDatabase.For.SqlDatabase(connectionString);
             EnsureDatabase.For.SqlDatabase(connectionString);
 
             var upgrader = DeployChanges.To.SqlDatabase(connectionString)

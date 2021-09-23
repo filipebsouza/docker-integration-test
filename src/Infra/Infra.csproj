@@ -15,4 +15,9 @@
     <PackageReference Include="NHibernate" Version="5.3.9" />
   </ItemGroup>
 
+  <ItemGroup>
+    <EmbeddedResource Include="Migrations/Script0001_CreateDatabase.sql" />
+    <EmbeddedResource Include="Migrations/Script0002_CreateClientTable.sql" />
+  </ItemGroup>
+
 </Project>
