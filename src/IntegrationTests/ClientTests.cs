@@ -10,10 +10,9 @@ using Xunit;
 
 namespace IntegrationTests
 {
-    public class ClientTests : IAsyncDisposable
+    public class ClientTests : IDisposable
     {
         private readonly SqlServerDockerManager _sqlServerDockerManager;
-        private ISession _session;
         private ClientRepository _clientRepository;
 
         public ClientTests()
@@ -25,19 +24,19 @@ namespace IntegrationTests
                 .WithImageName(ConfigModel.SqlServerImage)
                 .WithTag(ConfigModel.ImageTag)
                 .WithEnv(ConfigModel.ContainerEnvVariables)
-                .WithVolumeName(ConfigModel.VolumeName);            
+                .WithVolumeName(ConfigModel.VolumeName)
+                .WithConnectionString(ConfigModel.ConnectionString);
         }
 
-        public async ValueTask DisposeAsync()
+        public void Dispose()
         {
-            // _session.Close();
-            // await _sqlServerDockerManager.DisposeAsync();
+            _sqlServerDockerManager.Dispose();
         }
 
         [Fact]
         public async Task Should_be_create_an_client_on_database()
         {
-            // await _sqlServerDockerManager.RunContainer();
+            await _sqlServerDockerManager.RunContainer();
             MigrationRunner.Run(ConfigModel.ConnectionString);
             _clientRepository = new ClientRepository(ConfigModel.ConnectionString);
             var client = new Client

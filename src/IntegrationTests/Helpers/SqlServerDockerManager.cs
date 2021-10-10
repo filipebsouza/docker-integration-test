@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Data.SqlClient;
 using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
@@ -8,7 +9,7 @@ using Docker.DotNet.Models;
 
 namespace IntegrationTests.Helpers
 {
-    public class SqlServerDockerManager : IAsyncDisposable
+    public class SqlServerDockerManager : IDisposable
     {
         private readonly string _dockerUri =
             RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? "npipe://./pipe/docker_engine" :
@@ -23,6 +24,7 @@ namespace IntegrationTests.Helpers
         private string HostPort { get; set; }
         private string ContainerName { get; set; }
         private string[] Env { get; set; }
+        private string ConnectionString { get; set; }
 
         public SqlServerDockerManager()
         {
@@ -71,6 +73,12 @@ namespace IntegrationTests.Helpers
             return this;
         }
 
+        public SqlServerDockerManager WithConnectionString(string connectionString)
+        {
+            ConnectionString = connectionString;
+            return this;
+        }
+
         public async Task RunContainer()
         {
             if (!string.IsNullOrWhiteSpace(_containerID)) return;
@@ -113,7 +121,6 @@ namespace IntegrationTests.Helpers
                             {
                                 new PortBinding
                                 {
-
                                     HostIP = "localhost",
                                     HostPort = HostPort
                                 }
@@ -130,6 +137,32 @@ namespace IntegrationTests.Helpers
             _containerID = container.ID;
 
             await _dockerClient.Containers.StartContainerAsync(_containerID, null);
+            await WaitUntilDatabaseAvailableAsync();
+        }
+
+        private async Task WaitUntilDatabaseAvailableAsync()
+        {
+            var start = DateTime.UtcNow;
+            const int maxWaitTimeSeconds = 60;
+            var connectionEstablised = false;
+            while (!connectionEstablised && start.AddSeconds(maxWaitTimeSeconds) > DateTime.UtcNow)
+            {
+                try
+                {
+                    using var sqlConnection = new SqlConnection(ConnectionString);
+                    await sqlConnection.OpenAsync();
+                    connectionEstablised = true;
+                }
+                catch
+                {
+                    await Task.Delay(500);
+                }
+            }
+
+            if (!connectionEstablised)
+                throw new Exception("Connection to the SQL docker database could not be established within 60 seconds.");
+
+            return;
         }
 
         private void ValidateRequiredProperties()
@@ -139,6 +172,7 @@ namespace IntegrationTests.Helpers
             ThrowIfStringIsNullOrWhiteSpace(HostPort, nameof(HostPort));
             ThrowIfStringIsNullOrWhiteSpace(ContainerName, nameof(ContainerName));
             ThrowIfStringIsNullOrWhiteSpace(VolumeName, nameof(VolumeName));
+            ThrowIfStringIsNullOrWhiteSpace(ConnectionString, nameof(ConnectionString));
         }
 
         private static void ThrowIfStringIsNullOrWhiteSpace(string value, string propertyName)
@@ -147,13 +181,16 @@ namespace IntegrationTests.Helpers
                 throw new ArgumentException($"{propertyName} not can be null or white space!");
         }
 
-        public async ValueTask DisposeAsync()
+        public void Dispose()
         {
             if (!string.IsNullOrWhiteSpace(_containerID))
             {
-                await _dockerClient.Containers.StopContainerAsync(_containerID, new ContainerStopParameters());
-                await _dockerClient.Containers.RemoveContainerAsync(_containerID, new ContainerRemoveParameters());
-                await _dockerClient.Volumes.RemoveAsync(VolumeName, true, new CancellationToken());
+                _dockerClient.Containers.StopContainerAsync(_containerID, new ContainerStopParameters())
+                    .ConfigureAwait(false);
+                _dockerClient.Containers.RemoveContainerAsync(_containerID, new ContainerRemoveParameters())
+                    .ConfigureAwait(false);
+                _dockerClient.Volumes.RemoveAsync(VolumeName, true, new CancellationToken())
+                    .ConfigureAwait(false);
             }
 
             _dockerClient.Dispose();
