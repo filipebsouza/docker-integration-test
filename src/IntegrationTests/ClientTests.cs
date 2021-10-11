@@ -14,13 +14,10 @@ namespace IntegrationTests
     public class ClientTests : IDisposable
     {
         private readonly SqlServerDockerManager _sqlServerDockerManager;
-        private readonly ITestOutputHelper _output;
         private ClientRepository _clientRepository;
 
-        public ClientTests(ITestOutputHelper output)
+        public ClientTests()
         {
-            _output = output;
-
             _sqlServerDockerManager = new SqlServerDockerManager()
                 .WithContainerName(ConfigModel.ContainerName)
                 .WithExposedPort(ConfigModel.ContainerExposedPort)
@@ -34,16 +31,7 @@ namespace IntegrationTests
 
         public void Dispose()
         {
-            // _output.WriteLine("Before StopContainer");
-            // _sqlServerDockerManager.StopContainer();
-            // _output.WriteLine("Before RemoveContainer");
-            // _sqlServerDockerManager.RemoveContainer();
-            // _output.WriteLine("Before RemoveVolume");
-            // _sqlServerDockerManager.RemoveVolume();
-            // _output.WriteLine("Before Dispose");
-            // _sqlServerDockerManager.Dispose();
-            // _output.WriteLine("After Dispose");
-            _sqlServerDockerManager.Dispose2();
+            _sqlServerDockerManager.Dispose();
         }
 
         [Fact]

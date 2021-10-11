@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Data.SqlClient;
-using System.Linq;
 using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
@@ -182,60 +181,18 @@ namespace IntegrationTests.Helpers
                 throw new ArgumentException($"{propertyName} not can be null or white space!");
         }
 
-        public void StopContainer()
-        {
-            if (_containerID is { Length: > 0 })
-            {
-                _dockerClient.Containers.StopContainerAsync(_containerID, new ContainerStopParameters())
-                    .ConfigureAwait(false);
-            }
-        }
-
-        public void RemoveContainer()
-        {
-            if (_containerID is { Length: > 0 })
-            {
-                _dockerClient.Containers.RemoveContainerAsync(_containerID, new ContainerRemoveParameters())
-                    .ConfigureAwait(false);
-            }
-        }
-
-        public void RemoveVolume()
-        {
-            _dockerClient.Volumes.RemoveAsync(VolumeName, true, new CancellationToken())
-                .ConfigureAwait(false);
-        }
-
-        public void Dispose() => _dockerClient.Dispose();
-
-        public void Dispose2()
-        {
-            var sqlContainerIsRunning = true;
-            do
-            {
-                TearDown();
-
-                var runningContainers = _dockerClient.Containers.ListContainersAsync(new ContainersListParameters())
-                    .Result;
-
-                sqlContainerIsRunning = runningContainers
-                    .Any(container => container.Names.Any(name => name.Contains(ContainerName)));
-            }
-            while (sqlContainerIsRunning);
-
-            _dockerClient.Dispose();
-        }
-
-        public void TearDown()
+        public void Dispose()
         {
             if (_containerID is { Length: > 0 })
             {
                 _dockerClient.Containers.RemoveContainerAsync(_containerID, new ContainerRemoveParameters
                 {
                     Force = true
-                }).ConfigureAwait(false);
-                _dockerClient.Volumes.RemoveAsync(VolumeName, true, new CancellationToken()).ConfigureAwait(false);
+                }).ConfigureAwait(true);
+                _dockerClient.Volumes.RemoveAsync(VolumeName, true, new CancellationToken()).ConfigureAwait(true);
             }
+
+            _dockerClient.Dispose();
         }
     }
 }
