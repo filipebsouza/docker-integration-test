@@ -3,19 +3,12 @@ using System.Data;
 using System.Data.SqlClient;
 using Dapper;
 using Infra.Models;
-using NHibernate;
 
 namespace Infra.Repositories
 {
     public class ClientRepository
     {
-        private readonly ISession _session;
         private readonly string _connectionString;
-
-        public ClientRepository(ISession session)
-        {
-            _session = session;
-        }
 
         public ClientRepository(string connectionString)
         {

@@ -5,9 +5,7 @@ using Infra.Migrations;
 using Infra.Models;
 using Infra.Repositories;
 using IntegrationTests.Helpers;
-using NHibernate;
 using Xunit;
-using Xunit.Abstractions;
 
 namespace IntegrationTests
 {
