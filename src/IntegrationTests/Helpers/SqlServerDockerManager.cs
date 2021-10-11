@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Data.SqlClient;
+using System.Linq;
 using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
@@ -188,11 +189,20 @@ namespace IntegrationTests.Helpers
                 _dockerClient.Containers.RemoveContainerAsync(_containerID, new ContainerRemoveParameters
                 {
                     Force = true
-                }).ConfigureAwait(true);
-                _dockerClient.Volumes.RemoveAsync(VolumeName, true, new CancellationToken()).ConfigureAwait(true);
-            }
+                }).ConfigureAwait(false);
 
-            _dockerClient.Dispose();
+                var sqlServerVolumeIsRemoved = false;
+                do
+                {
+                    _dockerClient.Volumes.RemoveAsync(VolumeName, true, new CancellationToken()).ConfigureAwait(false);
+
+                    var runningVolumes = _dockerClient.Volumes.ListAsync().Result;
+                    sqlServerVolumeIsRemoved = !runningVolumes.Volumes.Any(v => v.Name == VolumeName);
+                }
+                while (!sqlServerVolumeIsRemoved);
+
+                _dockerClient.Dispose();
+            }
         }
     }
 }
