@@ -97,9 +97,9 @@ namespace IntegrationTests.Helpers
                 Tag = $"{Tag ?? "latest"}"
             }, new AuthConfig
             {
-                Email = "filipe.bsouza@gmail.com",
-                Password = "344b$WkJ^TLxLw@FY",
-                Username = "filipebsouza"
+                Email = "email@email.com",
+                Password = "XXX",
+                Username = "username"
             }, new Progress<JSONMessage>());
 
             var container = await _dockerClient.Containers.CreateContainerAsync(new CreateContainerParameters
